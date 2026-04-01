@@ -159,7 +159,7 @@ const PLAYS: Play[] = [
     id: 'spain-pnr',
     name: 'Spain PnR',
     category: 'BLOB / Set Play',
-    description: 'Back-screen on the roller\'s defender added to standard PnR, creating a 4-on-3.',
+    description: 'Back-screen on the roller’s defender added to standard PnR, creating a 4-on-3.',
     players: [
       { id:'o1', label:'O1', role:'offense', pos2d:{x:.5,y:.85}, pos3d:{x:0,y:0,z:7} },
       { id:'o2', label:'O2', role:'offense', pos2d:{x:.2,y:.7}, pos3d:{x:-5,y:0,z:5} },
@@ -186,7 +186,7 @@ const PLAYS: Play[] = [
       'Safety valve: skip to O3 in weak corner',
     ],
     quiz: [
-      { checkpoint:.55, question:'X4 switches onto O5\'s roll. X5 is caught on O4\'s backscreen. What is the best action?', choices:['O1 pull-up jumper','Lob to O5 attacking smaller X4','Reset the play','O4 slips to the 3-point line'], correct:1, explanation:'The Spain PnR is designed to create a size mismatch on the roll man. With X5 screened away, O5 attacks smaller X4 at the rim via lob.' },
+      { checkpoint:.55, question:'X4 switches onto O5’s roll. X5 is caught on O4’s backscreen. What is the best action?', choices:['O1 pull-up jumper','Lob to O5 attacking smaller X4','Reset the play','O4 slips to the 3-point line'], correct:1, explanation:'The Spain PnR is designed to create a size mismatch on the roll man. With X5 screened away, O5 attacks smaller X4 at the rim via lob.' },
     ],
   },
   {
@@ -213,7 +213,7 @@ const PLAYS: Play[] = [
     ],
     reads: [
       'O1 passes to O4 at high post',
-      'O1 immediately cuts off O4\'s shoulder toward basket',
+      'O1 immediately cuts off O4’s shoulder toward basket',
       'Read: If X1 trails → O4 drops pass for layup',
       'If cut denied → O4 attacks, O1 spaces to corner',
     ],
