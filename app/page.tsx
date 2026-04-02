@@ -119,7 +119,7 @@ const PLAYS: Play[] = [
       'Skip pass available to O5 for 3-pointer',
     ],
     quiz: [
-      { checkpoint:.4, question:'O4 sets the screen and X4 switches hard. What is the best read?', choices:['O1 drives baseline','O4 slips to the rim for lob','O1 kicks to corner 3','O2 cuts backdoor'], correct:1, explanation:'When the screener's defender switches early, the screener should slip (cut) before contact to receive a lob at the rim.' },
+      { checkpoint:.4, question:'O4 sets the screen and X4 switches hard. What is the best read?', choices:['O1 drives baseline','O4 slips to the rim for lob','O1 kicks to corner 3','O2 cuts backdoor'], correct:1, explanation:'When the screener\'s defender switches early, the screener should slip (cut) before contact to receive a lob at the rim.' },
       { checkpoint:.75, question:'O1 turns the corner and X5 helps from the dunker spot. What should O5 do?', choices:['Stand still in corner','Cut to the rim','Pop to the 3-point line','Set another screen'], correct:2, explanation:'When the help defender leaves the dunker/corner, O5 pops to the now-open 3-point line for the kick-out.' },
     ],
   },
