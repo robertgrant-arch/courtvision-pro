@@ -1267,7 +1267,7 @@ function PlayListPanel() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function TopBar({ canvasRef }: { canvasRef: React.RefObject<HTMLCanvasElement> }) {
-  const { plays, activePlayId, savedStatus, backToLibrary, updatePlayMeta, undo, redo, undoStack, redoStack, isAnimating, setIsAnimating, setCurrentFrame, show3D, setShow3D } = useStore();
+  const { plays, activePlayId, savedStatus, backToLibrary, updatePlayMeta, undo, redo, undoStack, redoStack, isAnimating, setIsAnimating, setCurrentFrame, setAnimFrame, show3D, setShow3D } = useStore();
   const play = plays.find(p => p.id === activePlayId);
   const [editing, setEditing] = useState(false);
   const [nameVal, setNameVal] = useState(play?.name ?? '');
