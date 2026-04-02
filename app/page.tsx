@@ -744,13 +744,12 @@ function EditorView() {
 
 // ==================== MAIN PAGE ====================
 export default function Page() {
-  const { plays, currentPlayId, openPlay } = useStore();
-  const play = plays.find(p => p.id === currentPlayId);
+  const { view, activePlayId } = useStore();
 
   return (
     <div className="h-screen bg-slate-950 text-white flex flex-col">
-      {play ? (
-        <EditorView play={play} />
+      {view === 'editor' && activePlayId ? (
+        <EditorView />
       ) : (
         <LibraryView />
       )}
