@@ -459,7 +459,7 @@ const useStore = create<St>()(persist((set, get) => ({
   updateAction: (pid, aid, u) => set(s => ({ plays: mutatePlays(s.plays, pid, p => ({ ...p, actions: p.actions.map(a => a.id === aid ? { ...a, ...u } : a) })), savedStatus: 'unsaved' })),
   deleteAction: (pid, aid) => set(s => { const prev = s.plays; return { plays: mutatePlays(prev, pid, p => ({ ...p, actions: p.actions.filter(a => a.id !== aid) })), undoStack: pushHist(s.undoStack, prev), redoStack: [], savedStatus: 'unsaved', selection: { type: null, id: null } }; }),
   addFrame: pid => set(s => { const prev = s.plays; return { plays: mutatePlays(prev, pid, p => { const ni = p.frames.length, li = ni - 1; return { ...p, frames: [...p.frames, { index: ni, durationMs: 1500 }], players: p.players.map(pl => ({ ...pl, positions: { ...pl.positions, [ni]: pl.positions[li] ?? pl.positions[0] ?? { x: 0.5, y: 0.5 } } })) }; }), undoStack: pushHist(s.undoStack, prev), redoStack: [], savedStatus: 'unsaved' }; }),
-  duplicateFrame: (pid, fi) => set(s => { const prev = s.plays; return { plays: mutatePlays(prev, pid, p => { const ni = p.frames.length; return { ...p, frames: [...p.frames, { index: ni, durationMs: 1500 }], players: p.players.map(pl => ({ ...pl, positions: { ...pl.positions, [ni]: { ...(pl.positions[fi] ?? { x: 0.5, y: 0.5 }) } } })), actions: [...p.actions, ...p.actions.filter(a => a.frameIndex === fi).map(a => ({ ...a, id: nanoid(), frameIndex: ni }))] }; }), undoStack: pushHist(s.undoStack, prev), redoStack: [], savedStatus: 'unsaved' }; }),
+  duplicateFrame: (pid, fi) => set(s => { const prev = s.plays; return { plays: mutatePlays(prev, pid, p => { const ni = p.frames.length; return { ...p, frames: [...p.frames, { index: ni, durationMs: 1500 }], players: p.players.map(pl => ({ ...pl, positions: { ...pl.positions, [ni]: { ...(pl.positions[fi] ?? { x: 0.5, y: 0.5 }) } } })), actions: [...p.actions, ...p.actions.filter(a => a.frameIndex === Math.floor(fi)).map(a => ({ ...a, id: nanoid(), frameIndex: ni }))] }; }), undoStack: pushHist(s.undoStack, prev), redoStack: [], savedStatus: 'unsaved' }; }),
   deleteFrame: (pid, fi) => set(s => {
     const prev = s.plays;
     const plays = mutatePlays(prev, pid, p => {
@@ -713,7 +713,11 @@ const CourtCanvas = forwardRef<HTMLCanvasElement, CanvasProps>(function CourtCan
 
   const getPos = useCallback((pl: Player, fi: number): Pos => {
     if (drag?.kind === 'player' && drag.id === pl.id) return drag.pos;
-    return pl.positions[fi] ?? pl.positions[0] ?? { x: 0.5, y: 0.5 };
+        const _f = Math.floor(fi), _c = Math.ceil(fi), _t = fi - _f;
+        const _p0 = pl.positions[_f] ?? pl.positions[0] ?? { x: 0.5, y: 0.5 };
+        if (_t === 0 || _c === _f) return _p0;
+        const _p1 = pl.positions[_c] ?? _p0;
+        return { x: _p0.x + (_p1.x - _p0.x) * _t, y: _p0.y + (_p1.y - _p0.y) * _t };
   }, [drag]);
 
   // Get control point in pixel space for a given action
@@ -738,7 +742,7 @@ const CourtCanvas = forwardRef<HTMLCanvasElement, CanvasProps>(function CourtCan
 
   const findAction = useCallback((px: number, py: number): PlayAction | null => {
     const fi = frameIndex;
-    for (const a of play.actions.filter(a => a.frameIndex === fi)) {
+    for (const a of play.actions.filter(a => a.frameIndex === Math.floor(fi))) {
       const fp = play.players.find(p => p.id === a.fromPlayerId); if (!fp) continue;
       const fromPx_ = toPx(getPos(fp, fi).x, getPos(fp, fi).y);
       let tp0 = a.toPosition;
@@ -775,7 +779,7 @@ const CourtCanvas = forwardRef<HTMLCanvasElement, CanvasProps>(function CourtCan
     const fi = isAnimating ? animFrame : frameIndex;
 
     // Draw actions
-    play.actions.filter(a => a.frameIndex === fi).forEach(a => {
+    play.actions.filter(a => a.frameIndex === Math.floor(fi)).forEach(a => {
       const fp = play.players.find(p => p.id === a.fromPlayerId); if (!fp) return;
       const fromPx_ = toPx(getPos(fp, fi).x, getPos(fp, fi).y);
       let tp0 = a.toPosition;
@@ -843,7 +847,7 @@ const CourtCanvas = forwardRef<HTMLCanvasElement, CanvasProps>(function CourtCan
     });
 
     // Draw annotations
-    (play.annotations ?? []).filter(a => a.frameIndex === fi).forEach(a => {
+    (play.annotations ?? []).filter(a => a.frameIndex === Math.floor(fi)).forEach(a => {
       const { x, y } = toPx(a.x, a.y);
       ctx.save(); ctx.font = 'bold 13px system-ui'; ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 3; ctx.strokeText(a.text, x, y); ctx.fillStyle = '#fbbf24'; ctx.fillText(a.text, x, y); ctx.restore();
     });
@@ -1272,10 +1276,29 @@ function TopBar({ canvasRef }: { canvasRef: React.RefObject<HTMLCanvasElement> }
   const handleClick = () => { setNameVal(play.name); setEditing(true); setTimeout(() => nameRef.current?.select(), 0); };
   const handleBlur = () => { setEditing(false); if (nameVal.trim() && nameVal !== play.name) updatePlayMeta(play.id, { name: nameVal.trim() }); };
   const handleAnimate = () => {
-    if (isAnimating) { setIsAnimating(false); return; }
-    setIsAnimating(true); let f = 0;
-    const adv = () => { if (f >= play.frames.length) { setIsAnimating(false); setCurrentFrame(0); return; } setCurrentFrame(f); setTimeout(adv, play.frames[f++]?.durationMs ?? 1200); }; adv();
-  };
+        if (isAnimating) { setIsAnimating(false); setAnimFrame(0); return; }
+        if (!play || play.frames.length < 2) return;
+        setIsAnimating(true);
+        let startTime: number | null = null;
+        let frameIdx = 0;
+        const totalFrames = play.frames.length;
+        const step = (ts: number) => {
+                if (!startTime) startTime = ts;
+                const dur = play.frames[frameIdx]?.durationMs ?? 1500;
+                const elapsed = ts - startTime;
+                const t = Math.min(elapsed / dur, 1);
+                setAnimFrame(frameIdx + t);
+                if (t >= 1) {
+                          frameIdx++;
+                          startTime = ts;
+                          if (frameIdx >= totalFrames - 1) {
+                                      setIsAnimating(false); setAnimFrame(0); setCurrentFrame(0); return;
+                                    }
+                        }
+                requestAnimationFrame(step);
+              };
+        requestAnimationFrame(step);
+      };
   return (
     <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-900 border-b border-slate-800 min-h-[52px] shrink-0">
       <button onClick={backToLibrary} className="flex items-center gap-1.5 text-slate-400 hover:text-white text-sm transition-colors shrink-0">
@@ -1402,7 +1425,7 @@ function QuizOverlay({ playId }: { playId: string }) {
   useEffect(() => { if (!done) drawFrame(fi, revealed); }, [fi, revealed, done, drawFrame]);
   if (!play) return null;
 
-  const acts = play.actions.filter(a => a.frameIndex === fi);
+  const acts = play.actions.filter(a => a.frameIndex === Math.floor(fi));
   const fc = play.frames.length;
   const handleAnswer = (correct: boolean) => {
     const ns = [...scores, correct]; setScores(ns);
